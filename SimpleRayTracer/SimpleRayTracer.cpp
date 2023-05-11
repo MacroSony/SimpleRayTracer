@@ -5,12 +5,49 @@
 
 #include <iostream>
 
+double hit_sphere(const point3& center, double radius, const ray& r) {
+    vec3 amc = r.origin() - center;
+    auto a = dot(r.direction(), r.direction());
+    auto b = 2.0 * dot(r.direction(), amc);
+    auto c = dot(amc, amc) - radius * radius;
+    auto discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+        return -1.0;
+    }
+    else {
+        return (-b - sqrt(discriminant)) / (2 * a);
+    }
+}
+
+color ray_color(const ray& r) {
+    auto t = hit_sphere(vec3(0, 0, -1), .5, r);
+    if (t > 0.0) {
+        vec3 normal = unit_vector(r.at(t) - point3(0, 0, -1));
+        return 0.5 * color(normal.x() + 1, normal.y() + 1, normal.z() + 1);
+    }
+    vec3 unit_direction = unit_vector(r.direction());
+    t = 0.5 * (unit_direction.y() + 1.0);
+    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0, 0, 0);
+}
+
 int main() {
 
     // Image
 
-    const int image_width = 256;
-    const int image_height = 256;
+    const auto aspect_ratio = 16.0 / 9.0;
+    const int image_height = 400;
+    const int image_width = static_cast<int>(image_height * aspect_ratio);
+
+    // Camera
+
+    auto viewport_height = 2.0;
+    auto viewport_width = aspect_ratio * viewport_height;
+    auto focal_length = 1.0;
+
+    auto origin = point3(0, 0, 0);
+    auto horizontal = vec3(viewport_width, 0, 0);
+    auto vertical = vec3(0, viewport_height, 0);
+    auto lower_left_corner = origin - horizontal / 2 - vertical / 2 - vec3(0, 0, focal_length);
 
     // Render
 
@@ -19,8 +56,10 @@ int main() {
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rRows Remaining: " << j << " " << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            color pix_color(double(i) / (image_width - 1), double(j) / (image_height - 1), 1.0);
-            write_color(std::cout, pix_color);
+            auto u = double(i) / (image_width - 1);
+            auto v = double(j) / (image_height - 1);
+            ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+            write_color(std::cout, ray_color(r));
         }
     }
     
