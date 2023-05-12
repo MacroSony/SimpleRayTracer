@@ -8,14 +8,14 @@
 double hit_sphere(const point3& center, double radius, const ray& r) {
     vec3 amc = r.origin() - center;
     auto a = dot(r.direction(), r.direction());
-    auto b = 2.0 * dot(r.direction(), amc);
+    auto hb = dot(r.direction(), amc);
     auto c = dot(amc, amc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
+    auto discriminant = hb * hb - 4 * a * c;
     if (discriminant < 0) {
         return -1.0;
     }
     else {
-        return (-b - sqrt(discriminant)) / (2 * a);
+        return (-hb - sqrt(discriminant)) / (2 * a);
     }
 }
 
@@ -35,8 +35,8 @@ int main() {
     // Image
 
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_height = 400;
-    const int image_width = static_cast<int>(image_height * aspect_ratio);
+    const int image_width = 400;
+    const int image_height = static_cast<int>(image_width / aspect_ratio);
 
     // Camera
 
